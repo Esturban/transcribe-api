@@ -1,0 +1,5 @@
+*.code-workspace
+venv
+.mp3
+output
+!requirements.txt
