@@ -3,3 +3,9 @@ venv
 .mp3
 output
 !requirements.txt
+__pycache__
+.DS_Store
+.env
+*.mp3
+*.txt
+!requirements.txt
