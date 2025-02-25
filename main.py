@@ -1,19 +1,17 @@
 import argparse
 import os
 import time
-from aims import extract_audio_from_video, convert_audio_to_text
+from aims import process_file
 
-import concurrent.futures
 import logging
-
+import shutil
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract audio from an MP4 video file and convert it to text.')    
-    parser.add_argument('video_path', help='The path to the MP4 video file')
-    parser.add_argument('output_audio_path', help='The path where the extracted audio will be saved')
+    parser = argparse.ArgumentParser(description='Extract audio from an MP4 video file and convert it to text.')
+    parser.add_argument('input_path', help='The path to the input file (video or audio) or folder containing files')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
 
     args = parser.parse_args()
@@ -23,11 +21,20 @@ def main():
         logging.info(f"Start time: {time.ctime(start_time)}")
     
     try:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_audio = executor.submit(extract_audio_from_video, args.video_path, args.output_audio_path)
-            future_audio.result()  # Wait for audio extraction to complete
-            future_text = executor.submit(convert_audio_to_text, args.output_audio_path, args.verbose)
-            future_text.result()  # Wait for audio-to-text conversion to complete
+        if os.path.isdir(args.input_path):
+            # Process all files in the root of the folder
+            for file in os.listdir(args.input_path):
+                input_file_path = os.path.join(args.input_path, file)
+                if os.path.isfile(input_file_path):
+                    output_audio_dir = os.path.join(args.input_path, 'processed')
+                    process_file(input_file_path, output_audio_dir, args.verbose)
+        else:
+            # Process a single file
+            output_audio_dir = os.path.join(os.path.dirname(args.input_path), 'processed')
+            process_file(args.input_path, output_audio_dir, args.verbose)
+            # Move the original audio file to the "processed" subfolder
+            os.makedirs(output_audio_dir, exist_ok=True)
+            shutil.move(args.input_path, os.path.join(output_audio_dir, os.path.basename(args.input_path)))
     except Exception as e:
         logging.error(f"Error: {e}")
     
