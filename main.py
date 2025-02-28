@@ -27,6 +27,7 @@ def main():
                 input_file_path = os.path.join(args.input_path, file)
                 if os.path.isfile(input_file_path):
                     output_audio_dir = os.path.join(args.input_path, 'processed')
+                    os.makedirs(output_audio_dir, exist_ok=True)
                     process_file(input_file_path, output_audio_dir, args.verbose)
         else:
             # Process a single file
