@@ -9,10 +9,9 @@ def transcribe_audio(audio_path: str=None,  mdl: str="tiny.en", dl_loc: str=None
     else:
         if not os.path.exists(dl_loc): os.mkdir(dl_loc)
         model = whisper.load_model(name=mdl, download_root=dl_loc)
-    #Tiny is roughly 75.6MB
-    #print(model.model_path.os.path.getsize())
-    return model.transcribe(audio_path, fp16=False)
     
+    return model.transcribe(audio_path, fp16=False)
+        
 def whisper_write(result: dict, path: str, ext: str):
     if path.lower().endswith(('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a')):
         ext_dir = os.path.join(os.path.dirname(path), ext)
