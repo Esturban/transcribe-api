@@ -13,6 +13,8 @@ with open(os.getenv("SYSTEM_INSTRUCTIONS"), "r") as file:
 start_time = time.time()
 
 txt_dir = os.getenv("TXT_DIR")
+
+os.makedirs(os.getenv("TARGET_DIR"), exist_ok=True)
 if not os.path.exists(txt_dir):
     raise FileNotFoundError(f"{txt_dir} directory not found")
 
@@ -22,7 +24,8 @@ for f, full_path in file_paths.items():
     
     with open(full_path, "r") as file:
         user_instructions = file.read()
-
+    
+    
     if not os.path.exists(f"{os.getenv("TARGET_DIR")}{f}"):
         print(f"Processing {f}...")
         try:
