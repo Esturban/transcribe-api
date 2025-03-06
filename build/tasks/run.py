@@ -47,35 +47,34 @@ print(f"Found {len(tasks)} tasks to process")
 for i, task in enumerate(tasks):
     print(f"Processing task {i+1}/{len(tasks)}: {task[:30]}...")
     start_time = time.time()
-    
-    try:
-        completion = client.chat.completions.create(
-            extra_headers={
-                "HTTP-Referer": os.getenv("REFERER"), 
-                "X-Title": os.getenv("TITLE"),
-            },
-            extra_body={},
-            model=os.getenv("OR_MODEL"),
-            messages=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": task}
-            ],
-            temperature=0.2
-        )
-        
-        # Generate a filename based on the task (use first few words)
-        task_words = re.sub(r'[^a-zA-Z0-9\s]', '', task.strip())[:30].strip().replace(' ', '_')
-        output_filename = f"task_{i+1}_{task_words}.txt"
-        
-        # Clean and save content
-        cleaned_content = re.sub(r'```[\w]*\n|```', '', completion.choices[0].message.content)
-        with open(os.path.join(target_dir, output_filename), "w") as file:
-            file.write(cleaned_content)
-        
-        end_time = time.time()
-        print(f"  Completed in {end_time - start_time:.2f} seconds")
-        
-    except Exception as e:
-        print(f"  Error processing task {i+1}: {e}")
+    # Generate a filename based on the task (use first few words)
+    task_words = re.sub(r'[^a-zA-Z0-9\s]', '', task.strip())[:30].strip().replace(' ', '_')
+    output_filename = f"task_{i+1}_{task_words}.txt"
+    if output_filename not in os.listdir(target_dir):
+        try:
+            completion = client.chat.completions.create(
+                extra_headers={
+                    "HTTP-Referer": os.getenv("REFERER"), 
+                    "X-Title": os.getenv("TITLE"),
+                },
+                extra_body={},
+                model=os.getenv("OR_MODEL"),
+                messages=[
+                    {"role": "system", "content": system_instructions},
+                    {"role": "user", "content": task}
+                ],
+                temperature=0.2
+            )
+            # Clean and save content
+            cleaned_content = re.sub(r'```[\w]*\n|```', '', completion.choices[0].message.content)
+            with open(os.path.join(target_dir, output_filename), "w") as file:
+                file.write(cleaned_content)
+            
+            end_time = time.time()
+            print(f"  Completed in {end_time - start_time:.2f} seconds")
+            
+        except Exception as e:
+            print(f"  Error processing task {i+1}: {e}")
+    else: continue
 
 print("All tasks completed!")
