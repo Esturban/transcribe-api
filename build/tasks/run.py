@@ -1,27 +1,21 @@
 import os
 import csv
 from pathlib import Path
+import sys
+import time
+import re
 
 script_path = Path(os.path.abspath(__file__))
 parent_dir = str(script_path.parent.parent.parent)  # Move up THREE directories
 os.chdir(parent_dir)
+sys.path.insert(0, parent_dir)
 
-from openai import OpenAI
 from dotenv import load_dotenv
-import time
-import re
+from aims.assistants import run_tasks
 load_dotenv()
 
 # Define path to CSV file - you can adjust this or add to .env
-CSV_PATH = "data/tasks.csv"  # You may want to set this in .env as TASKS_CSV
-
-client = OpenAI(
-  base_url=os.getenv("BASE_URL"),
-  api_key = os.getenv("OR_API_KEY") 
-)
-
-with open(os.getenv("TASK_INSTRUCTIONS"), "r") as file:
-    system_instructions = file.read()
+CSV_PATH = os.getenv("TASKS_CSV", "data/tasks.csv")
 
 # Create output directory
 target_dir = "data/tasks/processed/"
@@ -29,7 +23,7 @@ os.makedirs(target_dir, exist_ok=True)
 
 # Read tasks from CSV file
 tasks = []
-with open(CSV_PATH, 'r', encoding='utf-8',errors='replace') as csvfile:
+with open(CSV_PATH, 'r', encoding='utf-8', errors='replace') as csvfile:
     csv_reader = csv.reader(csvfile)
     try:
         next(csv_reader)  # Skip the header row
@@ -50,31 +44,27 @@ for i, task in enumerate(tasks):
     # Generate a filename based on the task (use first few words)
     task_words = re.sub(r'[^a-zA-Z0-9\s]', '', task.strip())[:30].strip().replace(' ', '_')
     output_filename = f"task_{i+1}_{task_words}.txt"
+    
     if output_filename not in os.listdir(target_dir):
         try:
-            completion = client.chat.completions.create(
-                extra_headers={
-                    "HTTP-Referer": os.getenv("REFERER"), 
-                    "X-Title": os.getenv("TITLE"),
-                },
-                extra_body={},
-                model=os.getenv("OR_MODEL"),
-                messages=[
-                    {"role": "system", "content": system_instructions},
-                    {"role": "user", "content": task}
-                ],
-                temperature=0.2
-            )
-            # Clean and save content
-            cleaned_content = re.sub(r'```[\w]*\n|```', '', completion.choices[0].message.content)
+            # Use the run_tasks function from aims.assistants
+            result = run_tasks(task)
+            
+            # Handle the response
+            if isinstance(result, dict) and "error" in result:
+                print(f"  Error processing task {i+1}: {result['error']}")
+                continue
+            
+            # Write the result to the output file
             with open(os.path.join(target_dir, output_filename), "w") as file:
-                file.write(cleaned_content)
+                file.write(result)
             
             end_time = time.time()
             print(f"  Completed in {end_time - start_time:.2f} seconds")
             
         except Exception as e:
             print(f"  Error processing task {i+1}: {e}")
-    else: continue
+    else: 
+        print(f"  Skipping task {i+1} (output file already exists)")
 
 print("All tasks completed!")
