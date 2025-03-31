@@ -4,7 +4,7 @@ Utility functions for assistant modules.
 import os
 import re
 from .client import get_client
-
+from aims.utils import replace_spaces_in_lines
 def call_ai(
     user_text, 
     instructions_env_var, 
@@ -44,7 +44,9 @@ def call_ai(
                 "HTTP-Referer": os.getenv("REFERER", "https://api.example.com"), 
                 "X-Title": os.getenv("TITLE", title),
             },
-            extra_body={},
+             extra_body={
+            "models": ["google/gemini-2.5-pro-exp-03-25", "google/gemini-2.0-flash-exp","deepseek/deepseek-chat-v3-0324"],
+            },
             model=model or os.getenv("OR_MODEL", "gpt-3.5-turbo"),
             messages=[
                 {"role": "system", "content": system_instructions},
@@ -53,7 +55,7 @@ def call_ai(
             temperature=float(temperature)
         )
         
-        content = completion.choices[0].message.content
+        content = "\n".join(replace_spaces_in_lines(completion.choices[0].message.content.split('\n'), ['Thin Space','Hair Space3']))
         
         # Clean markdown code blocks if requested
         if clean_markdown:
