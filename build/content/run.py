@@ -30,6 +30,7 @@ for f, full_path in file_paths.items():
         try:
             with open(full_path, "r", encoding="utf-8", errors="replace") as file:
                 user_instructions = file.read()
+            
             result = run_content(user_instructions)
             
             if isinstance(result, dict) and "error" in result:
