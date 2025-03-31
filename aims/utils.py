@@ -4,6 +4,7 @@ import os
 import shutil
 from .parse import extract_audio_from_video
 from .transcriber import convert_audio_to_text
+import random  # Import random for variability
 
 def setup_logging(verbose):
     log_level = logging.INFO if verbose else logging.CRITICAL
@@ -36,3 +37,33 @@ def process_file(input_path, output_audio_dir: str=None, verbose: bool=False):
     
     return text_result if verbose else None
 
+# Unicode spaces dictionary
+unicode_spaces = {
+    'Em Space': '\u2003',
+    'En Space': '\u2002',
+    'Thin Space': '\u2009',
+    'Hair Space': '\u200A',
+    'Narrow No-Break': '\u202F',
+    'Hair Space3': '\u200A\u200A\u200A',
+    'Zero Width Space': '\u200B',
+    'Word Joiner': '\u2060'
+}
+
+def replace_spaces_with_unicode(text: str, unicode_space_name: str) -> str:
+    """Replace spaces in the text with the specified Unicode character by name."""
+    unicode_character = unicode_spaces.get(unicode_space_name)
+    if unicode_character is None:
+        raise ValueError(f"Invalid Unicode space name: {unicode_space_name}")
+    return text.replace(' ', unicode_character)
+
+def replace_spaces_in_lines(text_lines: list, unicode_space_names: list) -> list:
+    """Replace spaces in each line of text with varying Unicode characters based on the provided names."""
+    modified_lines = []
+    for line in text_lines:
+        
+        # Randomly select a Unicode space name from the provided list
+        space_name = random.choice(unicode_space_names)
+        modified_line = replace_spaces_with_unicode(line, space_name)
+        modified_lines.append(modified_line)
+    
+    return modified_lines

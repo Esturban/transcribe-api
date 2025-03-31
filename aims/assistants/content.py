@@ -1,6 +1,4 @@
 import os
-import tempfile
-from .client import get_client
 from .utils import call_ai
 
 def run_content(content_text):
