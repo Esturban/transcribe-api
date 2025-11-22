@@ -2,6 +2,7 @@
 import logging
 import os
 import shutil
+import tempfile
 from .parse import extract_audio_from_video
 from .transcriber import convert_audio_to_text
 import random  # Import random for variability
@@ -11,31 +12,55 @@ def setup_logging(verbose):
     logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s', filename='transcribe.log', filemode='a')
 
 
-def process_file(input_path, output_audio_dir: str=None, verbose: bool=False):
-    
-    base_name = os.path.splitext(os.path.basename(input_path))[0]
-    
-    
+def process_file(
+    input_path,
+    output_audio_dir: str = None,
+    verbose: bool = False,
+    write_files: bool = True,
+):
+    original_filename = os.path.basename(input_path)
+    base_name = os.path.splitext(original_filename)[0]
+
+    temp_paths = []
     if input_path.lower().endswith(('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a')):
         # If the input is already an audio file, skip audio extraction
         logging.info("Input is an audio file, skipping audio extraction.")
         logging.info(f"Converting {input_path} to text...")
-        text_result = convert_audio_to_text(input_path, verbose)
-        if output_audio_dir is not None: 
-            output_audio_path = os.path.join(output_audio_dir, base_name + '.mp3')
-            shutil.move(input_path, os.path.join(output_audio_dir, os.path.basename(input_path)))
+        text_result = convert_audio_to_text(input_path, verbose, write_files=write_files)
+        if output_audio_dir is not None:
+            output_audio_path = os.path.join(output_audio_dir, original_filename)
+            os.makedirs(output_audio_dir, exist_ok=True)
+            if os.path.abspath(input_path) != os.path.abspath(output_audio_path):
+                shutil.move(input_path, output_audio_path)
     elif input_path.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.wmv', '.flv')):
         # If the input is a video file, extract audio first
         logging.info("Input is a video file, extracting the audio.")
         logging.info(f"Extracting {input_path} to audio...")
+        if output_audio_dir is not None:
+            os.makedirs(output_audio_dir, exist_ok=True)
+            output_audio_path = os.path.join(output_audio_dir, base_name + '.mp3')
+        else:
+            fd, output_audio_path = tempfile.mkstemp(suffix=".mp3")
+            os.close(fd)
+            temp_paths.append(output_audio_path)
         extract_audio_from_video(input_path, output_audio_path)
         logging.info(f"Converting {input_path} to text...")
-        text_result = convert_audio_to_text(output_audio_path, verbose)
-        if output_audio_dir is not None: shutil.move(input_path, os.path.join(output_audio_dir, os.path.basename(input_path)))
+        text_result = convert_audio_to_text(output_audio_path, verbose, write_files=write_files)
+        if output_audio_dir is not None:
+            target_video_path = os.path.join(output_audio_dir, os.path.basename(input_path))
+            if os.path.abspath(input_path) != os.path.abspath(target_video_path):
+                shutil.move(input_path, target_video_path)
     else: 
         return None 
     
-    return text_result if verbose else None
+    for path in temp_paths:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except OSError:
+            logging.warning(f"Failed to remove temporary file {path}")
+    
+    return text_result
 
 # Unicode spaces dictionary
 unicode_spaces = {

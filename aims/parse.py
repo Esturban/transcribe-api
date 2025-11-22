@@ -1,8 +1,8 @@
 import logging
-from moviepy import VideoFileClip
 import os
 
 def extract_audio_from_video(video_path: str, output_audio_path: str):
+    from moviepy import VideoFileClip
     """
     Extract audio from an MP4 video file and save it to a separate audio file.
 

@@ -6,13 +6,13 @@ import re
 from .client import get_client
 from aims.utils import replace_spaces_in_lines
 def call_ai(
-    user_text, 
-    instructions_env_var, 
+    user_text,
+    instructions_env_var,
     default_instructions="You are a helpful assistant.",
-    title="Assistant", 
+    title="Assistant",
     temperature=0.7,
     model=None,
-    clean_markdown=False
+    clean_markdown=False,
 ):
     """
     Make an OpenAI API call with standardized configuration.
