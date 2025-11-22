@@ -15,3 +15,5 @@ mdl/
 *.m4a
 *.vtt
 *.txt
+.cursor/
+memory-bank/
