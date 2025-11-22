@@ -35,6 +35,7 @@ REPOSITORY_PATH="$ARTIFACT_REGISTRY_LOCATION-docker.pkg.dev/$PROJECT_ID/$IMAGE_N
 DOCKER_IMAGE="$REPOSITORY_PATH/$IMAGE_NAME"
 SMOKE_MDL_PATH="${MDL_PATH:-/usr/src/app/mdl}"
 SMOKE_MODEL="${WHISPER_MODEL:-tiny.en}"
+TORCH_EXTRA_INDEX_URL="${TORCH_EXTRA_INDEX_URL:-https://download.pytorch.org/whl/cpu}"
 
 echo -e "${BLUE}Configuring Docker authentication for Artifact Registry (${ARTIFACT_REGISTRY_LOCATION})...${NC}"
 gcloud auth configure-docker "$ARTIFACT_REGISTRY_LOCATION-docker.pkg.dev"
@@ -52,16 +53,17 @@ if ! gcloud artifacts repositories describe "$IMAGE_NAME" \
 fi
 
 echo -e "${BLUE}Building Docker image ${DOCKER_IMAGE}...${NC}"
-if docker buildx build --platform linux/amd64 -t "$DOCKER_IMAGE" --load .; then
+BUILD_ARGS=(--build-arg "TORCH_EXTRA_INDEX_URL=${TORCH_EXTRA_INDEX_URL}")
+if docker buildx build --platform linux/amd64 -t "$DOCKER_IMAGE" "${BUILD_ARGS[@]}" --load .; then
   echo -e "${GREEN}buildx build completed successfully${NC}"
 else
   echo -e "${YELLOW}buildx build failed, falling back to docker build${NC}"
-  docker build -t "$DOCKER_IMAGE" .
+  docker build -t "$DOCKER_IMAGE" "${BUILD_ARGS[@]}" .
 fi
 
 if ! docker image inspect "$DOCKER_IMAGE" >/dev/null 2>&1; then
   echo -e "${YELLOW}Local image not found, attempting docker build...${NC}"
-  docker build -t "$DOCKER_IMAGE" .
+  docker build -t "$DOCKER_IMAGE" "${BUILD_ARGS[@]}" .
 fi
 
 echo -e "${BLUE}Verifying embedded Whisper model cache...${NC}"

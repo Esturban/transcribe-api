@@ -8,6 +8,13 @@ venv/
 *.wav
 *.m4a
 
+# Ignore large local datasets and caches
+data/
+mdl/
+memory-bank/
+build/
+temp_audio_file.m4a
+
 # Ignore Python cache files
 __pycache__/
 **/__pycache__
