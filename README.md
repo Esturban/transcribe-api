@@ -78,6 +78,30 @@ Run the container and expose port 8000:
 docker run --rm -p 8000:8000 --env-file .env transcribe-api
 ```
 
+### Deploying to Cloud Run
+
+Prerequisites:
+- Google Cloud project with the Artifact Registry and Cloud Run APIs enabled.
+- Authenticated `gcloud` CLI (`gcloud auth login`) and Docker installed locally.
+- `.env` containing `PROJECT_ID`, `IMAGE_NAME`, `SERVICE_NAME`, `REGION`, and any runtime settings (API keys, ports, etc.).
+
+To deploy:
+```bash
+./deploy.sh
+```
+
+The script will:
+- Configure Docker for Artifact Registry, create the repository if it does not exist, and build/push the container image.
+- Run a smoke test inside the freshly built image to ensure the Whisper model cache is already present.
+- Deploy the image to Cloud Run and forward every `.env` key except the build-only configuration variables.
+
+Model cache tip:
+- The Docker build now sets `WHISPER_MODEL=tiny.en` and `MDL_PATH=/usr/src/app/mdl`. During the build stage it downloads the model weights so Cloud Run instances skip the startup download.
+- To mirror that behavior locally (without rebuilding), you can warm the cache by running:
+  ```bash
+  python -c "import whisper; whisper.load_model('tiny.en', download_root='mdl')"
+  ```
+
 ### Endpoints
 
 #### `POST /transcribe`
