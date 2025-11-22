@@ -1,6 +1,8 @@
 ARG PYTHON_VERSION=3.12.3
+ARG TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
 # Builder stage
 FROM python:${PYTHON_VERSION}-slim-bullseye AS builder
+ARG TORCH_EXTRA_INDEX_URL
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -16,10 +18,15 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 RUN python -m pip install --upgrade pip && \
-    python -m pip wheel --no-cache-dir --wheel-dir /tmp/wheels -r requirements.txt
+    python -m pip wheel \
+        --no-cache-dir \
+        --extra-index-url ${TORCH_EXTRA_INDEX_URL} \
+        --wheel-dir /tmp/wheels \
+        -r requirements.txt
 
 
 FROM python:${PYTHON_VERSION}-slim-bullseye AS runtime
+ARG TORCH_EXTRA_INDEX_URL
 # Runtime stage
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
