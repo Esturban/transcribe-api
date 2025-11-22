@@ -18,7 +18,8 @@ def process_file(
     verbose: bool = False,
     write_files: bool = True,
 ):
-    base_name = os.path.splitext(os.path.basename(input_path))[0]
+    original_filename = os.path.basename(input_path)
+    base_name = os.path.splitext(original_filename)[0]
 
     temp_paths = []
     if input_path.lower().endswith(('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a')):
@@ -27,7 +28,7 @@ def process_file(
         logging.info(f"Converting {input_path} to text...")
         text_result = convert_audio_to_text(input_path, verbose, write_files=write_files)
         if output_audio_dir is not None:
-            output_audio_path = os.path.join(output_audio_dir, base_name + '.mp3')
+            output_audio_path = os.path.join(output_audio_dir, original_filename)
             os.makedirs(output_audio_dir, exist_ok=True)
             if os.path.abspath(input_path) != os.path.abspath(output_audio_path):
                 shutil.move(input_path, output_audio_path)
