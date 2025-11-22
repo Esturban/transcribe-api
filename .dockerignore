@@ -6,6 +6,7 @@ venv/
 *.mp3
 *.txt
 *.wav
+*.m4a
 
 # Ignore Python cache files
 __pycache__/
