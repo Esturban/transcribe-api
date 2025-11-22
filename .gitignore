@@ -17,3 +17,4 @@ mdl/
 *.txt
 .cursor/
 memory-bank/
+.venv/
