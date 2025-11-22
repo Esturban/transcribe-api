@@ -1,9 +1,9 @@
-import whisper
-from whisper.utils import get_writer
 import logging
 import os
 
 def transcribe_audio(audio_path: str=None,  mdl: str="tiny.en", dl_loc: str=None):
+    import whisper
+
     if dl_loc is None:
         model = whisper.load_model(name=mdl)
     else:
@@ -13,6 +13,8 @@ def transcribe_audio(audio_path: str=None,  mdl: str="tiny.en", dl_loc: str=None
     return model.transcribe(audio_path, fp16=False)
         
 def whisper_write(result: dict, path: str, ext: str):
+    from whisper.utils import get_writer
+
     if path.lower().endswith(('.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a')):
         ext_dir = os.path.join(os.path.dirname(path), ext)
         if not os.path.exists(ext_dir):
@@ -21,7 +23,13 @@ def whisper_write(result: dict, path: str, ext: str):
         writer(result, os.path.join(ext_dir, os.path.splitext(os.path.basename(path))[0] + '.' + ext))
                 
 
-def convert_audio_to_text(audio_path: str=None, verbose: bool=True, srt: bool=False, vtt: bool=False):
+def convert_audio_to_text(
+    audio_path: str = None,
+    verbose: bool = True,
+    srt: bool = False,
+    vtt: bool = False,
+    write_files: bool = True,
+):
     # Get the audio transcription based on the model in the local environment with the path set
     result = transcribe_audio(audio_path, dl_loc=os.getenv("MDL_PATH"))
     # Get the text from the result
@@ -29,7 +37,7 @@ def convert_audio_to_text(audio_path: str=None, verbose: bool=True, srt: bool=Fa
     # Log the information
     #logging.info(f"Transcription: {text}")
     # Ensure that the audio path location is specified
-    if audio_path is not None:
+    if write_files and audio_path is not None:
         logging.info(f"Audio path: {audio_path}")
         whisper_write(result, audio_path, "txt")
         if srt: whisper_write(result, audio_path, "srt")
