@@ -18,3 +18,4 @@ mdl/
 .cursor/
 memory-bank/
 .venv/
+.codegraph/
