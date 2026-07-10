@@ -19,3 +19,5 @@ mdl/
 memory-bank/
 .venv/
 .codegraph/
+.wolf/
+.claude/
