@@ -21,3 +21,7 @@ memory-bank/
 .codegraph/
 .wolf/
 .claude/
+CLAUDE.md
+GEMINI.md
+gemini.md
+copilot-instructions.md
